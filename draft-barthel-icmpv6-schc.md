@@ -1,0 +1,231 @@
+---
+stand_alone: true
+ipr: trust200902
+docname: draft-ietf-lpwan-coap-static-context-hc-02
+cat: info
+pi:
+  symrefs: 'yes'
+  sortrefs: 'yes'
+  strict: 'yes'
+  compact: 'yes'
+  toc: 'yes'
+
+title: LPWAN Static Context Header Compression (SCHC) for CoAP
+abbrev: LPWAN CoAP compression
+wg: lpwan Working Group
+author:
+- ins: D. Barthel
+  name: Dominique Barthel
+  org: orange
+- ins: L. Toutain
+  name: Laurent Toutain
+  org: Institut MINES TELECOM ; IMT Atlantique
+  street:
+  - 2 rue de la Chataigneraie
+  - CS 17607
+  city: 35576 Cesson-Sevigne Cedex
+  country: France
+  email: Laurent.Toutain@imt-atlantique.fr
+- ins: A. Kandasamy
+  name: Arunprabhu Kandasamy
+  org: Acklio
+normative:
+  rfc4443:
+  rfc4861:
+  I-D.toutain-lpwan-ipv6-static-context-hc:
+
+--- abstract
+
+ICMPv6 is companion protocol for IPv6 to configure hosts in the network, inform of errors 
+during packet 
+delivery and provide a basic device management with the ping command. This document decribes
+how to adapt ICMPv6 as defined in {{rfc4443}} to LPWAN using SCHC header compression mechanism
+and how to protect the LPWAN network and device from ICMP traffic. 
+
+
+
+
+
+--- middle
+
+
+
+# Introduction 
+
+{{rfc4443}} specify ICMPv6 and define a generic message format used either to inform 
+the source of errors during packet delivery or by applications for simple host 
+configuration or management.
+
+{{rfc4443}} defines 4 error messages: Destination Unreachable, Packet Too Big, 
+Time Exceeded and Parameter Problem. Echo Request and Echo Reply are also defined in 
+this RFC to support the ping program. Other message type, such as for Neighbor Discovery
+Protocol {{rfc4861}} are defined in other RFC. 
+
+This document focus on the compression of {{rfc4443}} messages over a LPWAN network.
+
+In the LPWAN architecture different
+scenarii can be exhibited:
+
+* the device is the source of an ICMP message, mainly in response to a incorrect IPv6
+message, or to a ping resquest. In that case, the device should be protected from this 
+traffic and the core SCHC C/D should act as a proxy to avoid unwanted traffic on the LPWAN.
+
+* the device is the destination of the ICMP message, mainly in response to a 
+packet sent on the network generating an error message. This document describes in
+section XXXX on compression can be defined. The device can
+
+
+
+# Device as a source of ICMP v6 message
+
+As stated in RFC XXXX, a node should generate ICMP message in response to a malformed
+IPv6 packet or which cannot be processed due to some incorrect field value.
+
+The purpose of this document is to protect the device from this traffic to avoid
+incorrect packets and the ICMPv6 notification to be send on the LPWAN network. 
+
+~~~~
+
+     Device       NGW     core SCHC C/D                    host
+     
+       |           |            |    Destination port=XXX    |
+       |           |            |<---------------------------|
+       |           |            |                            |
+       |           |            |--------------------------->|
+       |           |            | ICMPv6 port unreachable    |
+       |           |            |                            |
+       |           |            |                            |
+
+
+~~~~
+{: #Fig-ICMPv6-up title='Example of ICMPv6 error message'}
+
+{{Fig-ICMPv6-up}} shows an example of a IPv6 in a way to reach a device. The port used
+as destination is not known from the core SCHC C/D. Instead of sending the packet on
+the LPWAN and having this packet rejected by the device. The core SCHC C/D issue on the
+name of the device an ICMPv6 error message destination unreachable. 
+
+# Device is the destination of the ICMPv6 message
+
+A device may be configure to send periodically information to a server. If this
+server is not accessible on the network, an ICMPv6 will be generate by a router.
+This information can be useful far a device, for example to reduce the sending
+periodicity.
+
+~~~~
+
+     Device       NGW     core SCHC C/D                    Server
+     
+       |           |            |                            |
+       | SCHC compressed IPv6   |                            |
+       |~~~~~~~~~~~|----------->|----------------------X     |
+       |           |            | <---------------------     |
+       |<~~~~~~~~~~|------------| ICMPv6 Host unreachable    |
+       |SCHC compressed ICMPv6  |                            |
+       |           |            |                            |
+       |           |            |                            |
+
+
+~~~~
+{: #Fig-ICMPv6-down title='Example of ICMPv6 error message'}
+
+{{Fig-ICMPv6-down}} illustrates this behavior. The ICMPv6 message will contain "As much 
+of invoking packet as possible" as stated by RFC 4443. If there is enough information to
+find the rule which as been used to uncompress the erroneous packet, its rule id will be
+sent in the compressed ICMPv6 message.
+
+A SHCH rule must also be defined to compress the ICMPv6 header.
+
+# ping management
+
+If a ping request is generated by a device, then SCHC compression rules apply. If the 
+device is the destination of the ping request, the default behavior is to avoid
+sending the ping request on the LPWAN. Three behavior can be defined, the code value
+is used to distinguish among them:
+
+* code = 0, the SCHC answer on the behalt of the device if a rule regarding the 
+IPv6 address of the device is found.
+
+* code = 1, the SCHC queries the NWG (or keep a local database) and answer in the reply 
+the number of second since the last frame emitted by the device.
+
+* code =  2, the SCHC compresses the ICMPv6 and forward it to the device. 
+
+~~~~
+
+     Device       NGW     core SCHC C/D                    host
+     
+       |           |            |    Echo request code=0     |
+       |           |            |<---------------------------|
+       |           |            |                            |
+       |           |            |--------------------------->|
+       |           |            |    Echo reply code = 0     |
+       |           |            |                            |
+       |           |            |    Echo request code=1     |
+       |           |<==========>|<---------------------------|
+       |           |            |                            |
+       |           |            |--------------------------->|
+       |           |            |    Echo reply code = 1     |
+       |           |            |    last seen               |
+       |           |            |                            |
+       |           |            |    Echo request code=2     |
+       |<~~~~~~~~~~|------------|<---------------------------|
+       |           |            |                            |
+       |~~~~~~~~~~~|----------->|--------------------------->|
+       |           |            |    Echo reply code = 1     |
+       |           |            |    last seen               |
+       |           |            |                            |
+
+~~~~
+{: #Fig-ICMPv6-ping title='Example of ICMPv6 error message'}
+
+# ICMPv6 Error Message compression.
+
+ICMPv6 Error messages defined in {{rfc4443}} contains several fields has shown in 
+{{Fig-ICMP-error}}.
+
+~~~~
+
+       0                   1                   2                   3
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |     Type      |     Code      |          Checksum             |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            Value                              |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                    As much of invoking packet                 |
+      +                as possible without the ICMPv6 packet          +
+      |                exceeding the minimum IPv6 MTU [IPv6]          |
+
+~~~~ 
+{: #Fig-ICMP-error title='ICMPv6 Error Message'}
+
+Type can take the values between 1 and 4, code can be set between 0 and 6. Value is
+unused for Destination Unreachable and Time exceed message. It contains the MTU for
+Packet Too Big and a pointer on the byte causing the error for Parameter error message. 
+Therefore this value should not be higher than 1280 bytes in LPWAN networks.
+
+The following generic rule can be used to compress ICMPv6 messages. Some more specific
+rules can also be defined. 
+
+Type field can be associated to a matching list [1, 2, 3, 4] which be compressed into 2 
+bits. Code can be reduced to 3 bits using LSB CDF. Value can be set to 11 bits using LSB 
+CDF, but if the device is known to send smaller packets, then the size of this field can
+be reduced.
+
+The rest of the ICMPv6 message contains the beginning of the message that have generated
+this ICMPv6 error message. This information can be used to identify the SCHC rule that
+was used to decompress the erroneous packet. If the rule has been found then the rule id 
+can be added at the end of the compressed ICMPv6 message. Otherwise the compressed 
+packet ends after the compressed value field.
+
+
+
+## Traceroute case
+
+
+# ICMPv6 Proxying Error Message.
+
+# ICMPv6 Echo Request/Reply Management.
+
+--- back
