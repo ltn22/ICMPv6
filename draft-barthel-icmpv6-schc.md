@@ -150,10 +150,10 @@ This information can be useful to the Device, for example for reducing the repor
 {{Fig-ICMPv6-down}} illustrates this behavior. {{rfc4443}} states that the "ICMPv6 error message MUST include as much 
 of the IPv6 offending (invoking) packet ... as possible".
 In order to comply with this requirement, if there is enough information in the incoming ICMPv6 message for the core SCHC C/D to
-identify the rule that has been used to uncompress the erroneous IPv6 packet, this Rule Id MUST be
+identify the rule that has been used to uncompress the erroneous IPv6 packet, this Rule Id must be
 sent in the compressed ICMPv6 message to the Device.
 
-A SCHC rule is defined to compress the ICMPv6 header itself.
+A SCHC rule is defined to compress the ICMPv6 header itself (see section xxx).
 
 ## Ping
 
@@ -219,13 +219,13 @@ ICMPv6 error messages defined in {{rfc4443}} contain several fields as shown in
 ~~~~ 
 {: #Fig-ICMP-error title='ICMPv6 Error Message'}
 
-Type can take the values between 1 and 4, code can be set to values between 0 and 6. Value is
+Type can take the values 1 to 4, Code can be set to values between 0 and 6. Value is
 unused for Destination Unreachable and Time Exceeded messages. It contains the MTU for
 Packet Too Big message and a pointer to the byte causing the error for Parameter Error message. 
-Therefore, this value should not be higher than 1280 bytes in LPWAN networks.
+Therefore, Value should not be greater than 1280 in LPWAN networks.
 
-The following generic rule can be used to compress ICMPv6 error messages. Some more specific
-rules can also be defined. 
+The following generic rule can be used to compress all ICMPv6 error messages as defined today. More specific
+rules can also be defined to achieve better compression of some error messages. 
 
 The Type field can be associated to a matching list [1, 2, 3, 4] which be compressed into 2 
 bits. Code can be reduced to 3 bits using LSB CDF. Value can be sent on 11 bits using LSB 
@@ -233,9 +233,9 @@ CDF, but if the Device is known to send smaller packets, then the size of this f
 be reduced.
 
 By {{rfc4443}}, the rest of the ICMPv6 message must contain as much as possible of the IPv6 offending (invoking) packet that triggered
-this ICMPv6 error message. This information MUST be used to try and identify the SCHC rule that
+this ICMPv6 error message. This information is used to try and identify the SCHC rule that
 was used to decompress the offending IPv6 packet. If the rule can be found then the Rule Id 
-MUST be added at the end of the compressed ICMPv6 message. Otherwise the compressed 
+is added at the end of the compressed ICMPv6 message. Otherwise the compressed 
 packet ends with the compressed Value field.
 
 
