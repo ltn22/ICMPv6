@@ -54,7 +54,7 @@ delivery and provide a basic device management with the ping command.
 
 This document decribes
 how to adapt ICMPv6 as defined in {{rfc4443}} to LPWAN using SCHC header compression mechanism
-and how to protect the LPWAN network and the End-Device from undesirable ICMPv6 traffic. 
+and how to protect the LPWAN network and the Device from undesirable ICMPv6 traffic. 
 
 
 
@@ -77,30 +77,35 @@ Protocol {{rfc4861}} are defined in other RFCs.
 
 This document focuses on the compression of {{rfc4443}} messages over a LPWAN network.
 
+# Terminology
+
+This draft re-uses the Terminology defined in {{I-D.ietf-lpwan-ipv6-static-context-hc}}
+
+# Use cases
+
 In the LPWAN architecture, different scenarii can be exhibited:
 
-* the End-Device is the source of an ICMP message, mainly in response to an incorrect incoming IPv6
-message, or in response to a ping request. In that case, the End-Device should be protected from this 
+* the Device is the source of an ICMP message, mainly in response to an incorrect incoming IPv6
+message, or in response to a ping request. In that case, the Device should be protected from this 
 traffic and the core SCHC C/D should act as a proxy to avoid unwanted traffic on the LPWAN.
 
-* the End-Device is the destination of the ICMP message, mainly in response to a
-packet sent by the End-Device to the network that generates an error message. This document describes in
+* the Device is the destination of the ICMP message, mainly in response to a
+packet sent by the Device to the network that generates an error message. This document describes in
 section XXXX the compression to be applied.
 
-
-# End-Device as source of ICMPv6 message
+## Device as the source of an ICMPv6 message
 
 As stated in {{rfc4443}}, a node should generate an ICMPv6 message in response to an
 IPv6 packet that is malformed or which cannot be processed due to some incorrect field value.
 
 
-The intent of this document is to spare both the End-Device and the LPWAN network this un-necessary traffic.
+The intent of this document is to spare both the Device and the LPWAN network this un-necessary traffic.
 The incorrect packets should be caught at the core SCHC C/D and the ICMPv6 notification should be sent back from there.
 
 
 ~~~~
 
-  End-Device      NGW     core SCHC C/D                 Internet Host
+     Device       NGW     core SCHC C/D                 Internet Host
      
        |           |            |    Destination Port=XXX    |
        |           |            |<---------------------------|
@@ -114,20 +119,20 @@ The incorrect packets should be caught at the core SCHC C/D and the ICMPv6 notif
 ~~~~
 {: #Fig-ICMPv6-up title='Example of ICMPv6 error message sent back to the Internet'}
 
-{{Fig-ICMPv6-up}} shows an example of an IPv6 packet trying to reach an End-Device. The port used
+{{Fig-ICMPv6-up}} shows an example of an IPv6 packet trying to reach an Device. The port used
 as destination is not known from the core SCHC C/D. Instead of sending the packet over
-the LPWAN and having this packet rejected by the End-Device, the core SCHC C/D issues
-an ICMPv6 error message "Destination Unreachable" on behalf of the End-Device.
+the LPWAN and having this packet rejected by the Device, the core SCHC C/D issues
+an ICMPv6 error message "Destination Unreachable" on behalf of the Device.
 
-# End-Device as destination of the ICMPv6 message
+## Device as the destination of an ICMPv6 message
 
-In this situation, an End-Device is configured to send information to a server. If this
-server is not accessible on the Internet, an ICMPv6 message will be generated back towards the End-Device by an intermediate router.
-This information can be useful to the End-Device, for example for reducing the reporting rate in case of periodic reporting of data.
+In this situation, an Device is configured to send information to a server. If this
+server is not accessible on the Internet, an ICMPv6 message will be generated back towards the Device by an intermediate router.
+This information can be useful to the Device, for example for reducing the reporting rate in case of periodic reporting of data.
 
 ~~~~
 
-  End-Device      NGW     core SCHC C/D                Internet Server
+     Device       NGW     core SCHC C/D                Internet Server
      
        |           |            |                            |
        | SCHC compressed IPv6   |                            |
@@ -140,34 +145,34 @@ This information can be useful to the End-Device, for example for reducing the r
 
 
 ~~~~
-{: #Fig-ICMPv6-down title='Example of ICMPv6 error message sent back to the End-Device'}
+{: #Fig-ICMPv6-down title='Example of ICMPv6 error message sent back to the Device'}
 
 {{Fig-ICMPv6-down}} illustrates this behavior. {{rfc4443}} states that the "ICMPv6 error message MUST include as much 
 of the IPv6 offending (invoking) packet ... as possible".
 In order to comply with this requirement, if there is enough information in the incoming ICMPv6 message for the core SCHC C/D to
 identify the rule that has been used to uncompress the erroneous IPv6 packet, this Rule Id MUST be
-sent in the compressed ICMPv6 message to the End-Device.
+sent in the compressed ICMPv6 message to the Device.
 
 A SCHC rule is defined to compress the ICMPv6 header itself.
 
-# Ping management
+## Ping
 
-If a ping request is generated by an End-Device, then SCHC compression rules apply. If the
-End-Device is the destination of the ping request, the default behavior is to avoid
+If a ping request is generated by an Device, then SCHC compression rules apply. If the
+Device is the destination of the ping request, the default behavior is to avoid
 sending the ping request over the LPWAN. Three behaviors can be defined, with the code value
 being used to distinguish them:
 
-* code = 0, the SCHC C/D answers on the behalf of the End-Device if a rule regarding the 
-IPv6 address of the End-Device is found.
+* code = 0, the SCHC C/D answers on the behalf of the Device if a rule regarding the 
+IPv6 address of the Device is found.
 
 * code = 1, the SCHC C/D queries the NGW (or maintains a local database) and answers with
-the number of seconds since the End-Device last transmission.
+the number of seconds since the Device last transmission.
 
-* code =  2, the SCHC C/D compresses the ICMPv6 message and forwards it to the End-Device.
+* code =  2, the SCHC C/D compresses the ICMPv6 message and forwards it to the Device.
 
 ~~~~
 
-  End-Device      NGW     core SCHC C/D                 Internet Host
+     Device       NGW     core SCHC C/D                 Internet Host
      
        |           |            |    Echo request code=0     |
        |           |            |<---------------------------|
@@ -195,7 +200,7 @@ the number of seconds since the End-Device last transmission.
 
 # ICMPv6 Error Message compression.
 
-ICMPv6 Error messages defined in {{rfc4443}} contains several fields has shown in 
+ICMPv6 error messages defined in {{rfc4443}} contain several fields as shown in 
 {{Fig-ICMP-error}}.
 
 ~~~~
@@ -214,24 +219,24 @@ ICMPv6 Error messages defined in {{rfc4443}} contains several fields has shown i
 ~~~~ 
 {: #Fig-ICMP-error title='ICMPv6 Error Message'}
 
-Type can take the values between 1 and 4, code can be set between 0 and 6. Value is
-unused for Destination Unreachable and Time exceed message. It contains the MTU for
-Packet Too Big and a pointer on the byte causing the error for Parameter error message. 
-Therefore this value should not be higher than 1280 bytes in LPWAN networks.
+Type can take the values between 1 and 4, code can be set to values between 0 and 6. Value is
+unused for Destination Unreachable and Time Exceeded messages. It contains the MTU for
+Packet Too Big message and a pointer to the byte causing the error for Parameter Error message. 
+Therefore, this value should not be higher than 1280 bytes in LPWAN networks.
 
-The following generic rule can be used to compress ICMPv6 messages. Some more specific
+The following generic rule can be used to compress ICMPv6 error messages. Some more specific
 rules can also be defined. 
 
-Type field can be associated to a matching list [1, 2, 3, 4] which be compressed into 2 
-bits. Code can be reduced to 3 bits using LSB CDF. Value can be set to 11 bits using LSB 
-CDF, but if the End-Device is known to send smaller packets, then the size of this field can
+The Type field can be associated to a matching list [1, 2, 3, 4] which be compressed into 2 
+bits. Code can be reduced to 3 bits using LSB CDF. Value can be sent on 11 bits using LSB 
+CDF, but if the Device is known to send smaller packets, then the size of this field can
 be reduced.
 
-The rest of the ICMPv6 message contains the beginning of the message that have generated
-this ICMPv6 error message. This information can be used to identify the SCHC rule that
-was used to decompress the erroneous packet. If the rule has been found then the rule id 
-can be added at the end of the compressed ICMPv6 message. Otherwise the compressed 
-packet ends after the compressed value field.
+By {{rfc4443}}, the rest of the ICMPv6 message must contain as much as possible of the IPv6 offending (invoking) packet that triggered
+this ICMPv6 error message. This information MUST be used to try and identify the SCHC rule that
+was used to decompress the offending IPv6 packet. If the rule can be found then the Rule Id 
+MUST be added at the end of the compressed ICMPv6 message. Otherwise the compressed 
+packet ends with the compressed Value field.
 
 
 
