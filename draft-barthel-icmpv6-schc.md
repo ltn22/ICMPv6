@@ -35,47 +35,62 @@ author:
 - ins: A. Kandasamy
   name: Arunprabhu Kandasamy
   org: Acklio
-  city: 35576 Cesson-Sevigne Cedex
+  street:
+  - 2bis rue de la Chataigneraie
+  city: 35510 Cesson-Sevigne Cedex
   country: France
   email: arun@ackl.io  
 normative:
+  RFC2119:
   RFC4443:
   RFC4861:
   RFC4884:
+  RFC8174:
+  RFC8200:
   I-D.ietf-lpwan-ipv6-static-context-hc:
 
 --- abstract
 
-ICMPv6 is a companion protocol to IPv6 that is used to inform of errors
-during packet delivery and to provide a network debugging feature with Echo Request/Reply (used by the ping command).
+ICMPv6 is a companion protocol to IPv6.
+It defines messages that inform the source of IPv6 packets of errors
+during packet delivery.
+It also defines the Echo Request/Reply messages that are used for basic network troubleshooting (ping command).
 
 
 This document describes
-how to adapt ICMPv6 as defined in {{RFC4443}} to LPWANs by using SCHC to compress ICMPv6 headers
+how to adapt ICMPv6 to Low Power Wide Area Networks (LPWANs) by compressing ICMPv6 headers
 and by protecting the LPWAN network and the Device from undesirable ICMPv6 traffic.
-
-
-
 
 
 --- middle
 
 
-
 # Introduction
 
-{{RFC4443}} specifies ICMPv6 and defines a generic message format to be used either by nodes to inform
-the source about errors during packet delivery or by applications for simple debugging debugging.
+ICMPv6 {{RFC4443}} is a companion protocol to IPv6 {{RFC8200}}.
+
+{{RFC4443}} defines a generic message format.
+This format is used for messages to be sent back to the source of an IPv6 packet to inform it about errors during packet delivery. 
 
 More specifically, {{RFC4443}} defines 4 error messages: Destination Unreachable, Packet Too Big,
-Time Exceeded and Parameter Problem. It also defines the Echo Request and Echo Reply messages, which provide support for the ping application. Other ICMPv6 message types, such as those used by the Neighbor Discovery
-Protocol {{RFC4861}}, are defined in other RFCs.
+Time Exceeded and Parameter Problem.
 
-This document focuses on compressing {{RFC4443}} messages to be transmitted over an LPWAN network, and on proxying the Device to save it unwanted traffic.
+{{RFC4443}} also defines the Echo Request and Echo Reply messages, which provide support for the ping application. 
+
+Other ICMPv6 messages are defined in other RFCs, such as an extended format of the same messages {{RFC4884}}
+and other messages used by the Neighbor Discovery Protocol {{RFC4861}}.
+
+This document focuses on using Static Context Header Compression (SCHC) to compress {{RFC4443}} messages that need to be transmitted over the LPWAN network, and on having the LPWAN gateway proxying the Device to save it the unwanted traffic.
 
 # Terminology
 
 This draft re-uses the Terminology defined in {{I-D.ietf-lpwan-ipv6-static-context-hc}}.
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", 
+"SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", 
+and "OPTIONAL" in this document are to be interpreted as 
+described in BCP 14 {{RFC2119}} {{RFC8174}} when, and only when, they 
+appear in all capitals, as shown here. 
 
 # Use cases
 
@@ -173,7 +188,7 @@ The ICMPv6 error messages defined in {{RFC4443}} contain the fields shown in
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       |                    As much of invoking packet                 |
       +                as possible without the ICMPv6 packet          +
-      |                exceeding the minimum IPv6 MTU [IPv6]          |
+      |                exceeding the minimum IPv6 MTU                 |
 
 ~~~~
 {: #Fig-ICMP-error title='ICMPv6 Error Message format'}
@@ -186,7 +201,7 @@ Therefore, Value is never expected to be greater than 1280 in LPWAN networks.
 The following generic rule can therefore be used to compress all ICMPv6 error messages as defined today.
 More specific rules can also be defined to achieve better compression of some error messages.
 
-The Type field can be associated to a matching list \[1, 2, 3, 4\] and is therefore compressed downto 2
+The Type field can be associated to a matching list \[1, 2, 3, 4\] and is therefore compressed down to 2
 bits. Code can be reduced to 3 bits using the LSB CDF. Value can be sent on 11 bits using the LSB
 CDF, but if the Device is known to send smaller packets, then the size of this field can
 be further reduced.
@@ -201,7 +216,7 @@ packet ends with the compressed Value field.
  {{RFC4443}} states that the "ICMPv6 error message MUST include as much
 of the IPv6 offending (invoking) packet ... as possible".
 In order to comply with this requirement, if there is enough information in the incoming ICMPv6 message for the core SCHC C/D to
-identify the rule that has been used to uncompress the erroneous IPv6 packet, this Rule Id must be
+identify the rule that has been used to decompress the erroneous IPv6 packet, this Rule Id must be
 sent in the compressed ICMPv6 message to the Device.
 TODO: the erroneous IPv6 packet header (not just the Rule Id) should be sent back. This includes the Rule Id and the compression residue. This means the SCHC C/D uses the context backwards (in the reverse direction). How does the Device know it must also use the context backwards?
 
@@ -297,10 +312,18 @@ TODO: what does it mean to respond "with the number of seconds ..."? There is no
 * Code =  2: the SCHC C/D compresses the ICMPv6 message and forwards it to the Device. The Echo Reply message sent by the Device is also compressed.
 Since the Echo Request message comes from the Internet, the values of the Identifier, Sequence Number and Data fields cannot be known in advance, and therefore must be transmitted.
 However, it is likely that the Echo Request with Code 2 will be firewalled from the Internet and restricted to authorized users.
-Therefore, the Echo Request message can be assumed to have the same content as recommended in {{DevicePings}}, and the same compresion rules apply.
+Therefore, the Echo Request message can be assumed to have the same content as recommended in {{DevicePings}}, and the same compression rules apply.
 
 
 # Traceroute
+
+# Security considerations
+
+TODO
+
+# IANA Considerations
+
+This document has no actions for IANA.
 
 
 --- back
