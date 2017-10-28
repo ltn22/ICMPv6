@@ -209,8 +209,8 @@ The following generic rule can therefore be used to compress all ICMPv6 error me
 More specific rules can also be defined to achieve better compression of some error messages.
 
 The Type field can be associated to a matching list \[1, 2, 3, 4\] and is therefore compressed down to 2
-bits. Code can be reduced to 3 bits using the LSB CDF. Value can be sent on 11 bits using the LSB
-CDF, but if the Device is known to send smaller packets, then the size of this field can
+bits. Code can be reduced to 3 bits using the LSB CDA. Value can be sent on 11 bits using the LSB
+CDA, but if the Device is known to send smaller packets, then the size of this field can
 be further reduced.
 
 By {{RFC4443}}, the rest of the ICMPv6 message must contain as much as possible of the IPv6 offending (invoking) packet that triggered
@@ -326,8 +326,8 @@ Therefore, the Echo Request message can be assumed to have the same content as r
 
 # Traceroute
 
-The traceroute6 program sends succesive probe packets destined to a chosen target
-but with the Hop Limit value succesively incremented from the initial value 1.
+The traceroute6 program sends successive probe packets destined to a chosen target
+but with the Hop Limit value successively incremented from the initial value 1.
 
 It expects to receive a "Time Exceeded" (Type = 3) "Hop Limit" (Code = 0) ICMPv6 error message back from the successive routers along the path to the destination.
 
