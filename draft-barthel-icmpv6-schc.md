@@ -31,10 +31,13 @@ author:
   - CS 17607
   city: 35576 Cesson-Sevigne Cedex
   country: France
-  email: Laurent.Toutain@imt-atlantique.fr
+  email: laurent.toutain@imt-atlantique.fr
 - ins: A. Kandasamy
   name: Arunprabhu Kandasamy
   org: Acklio
+  city: 35576 Cesson-Sevigne Cedex
+  country: France
+  email: arun@ackl.io  
 normative:
   RFC4443:
   RFC4861:
