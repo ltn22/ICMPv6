@@ -48,6 +48,8 @@ normative:
   RFC8174:
   RFC8200:
   I-D.ietf-lpwan-ipv6-static-context-hc:
+informative:
+  I-D.ietf-lpwan-overview:
 
 --- abstract
 
@@ -55,10 +57,11 @@ ICMPv6 is a companion protocol to IPv6.
 It defines messages that inform the source of IPv6 packets of errors
 during packet delivery.
 It also defines the Echo Request/Reply messages that are used for basic network troubleshooting (ping command).
+ICMPv6 messages are transported on IPv6.
 
 
 This document describes
-how to adapt ICMPv6 to Low Power Wide Area Networks (LPWANs) by compressing ICMPv6 headers
+how to adapt ICMPv6 to Low Power Wide Area Networks (LPWANs) by compressing ICMPv6/IPv6 headers
 and by protecting the LPWAN network and the Device from undesirable ICMPv6 traffic.
 
 
@@ -81,6 +84,8 @@ Other ICMPv6 messages are defined in other RFCs, such as an extended format of t
 and other messages used by the Neighbor Discovery Protocol {{RFC4861}}.
 
 This document focuses on using Static Context Header Compression (SCHC) to compress {{RFC4443}} messages that need to be transmitted over the LPWAN network, and on having the LPWAN gateway proxying the Device to save it the unwanted traffic.
+
+LPWANs' salient characteristics are described in {{I-D.ietf-lpwan-overview}}
 
 # Terminology
 
@@ -111,7 +116,7 @@ These cases are further described in {{DetailedBehavior}}.
 
 # Detailed behavior {#DetailedBehavior}
 
-## Device is the source of an ICMPv6 error message
+## Device is the source of an ICMPv6 error message {#ProxyErrMsg}
 
 As stated in {{RFC4443}}, a node should generate an ICMPv6 message in response to an
 IPv6 packet that is malformed or which cannot be processed due to some incorrect field value.
@@ -141,7 +146,9 @@ The incorrect packets should be caught at the core SCHC C/D and the ICMPv6 notif
 as destination port is not "known" (needs better definition) from the core SCHC C/D. Instead of sending the packet over
 the LPWAN and having this packet rejected by the Device, the core SCHC C/D issues
 an ICMPv6 error message "Destination Unreachable" (Type 1) with Code 1 ("Port Unreachable") on behalf of the Device.
-This assumes that all ports that the Device listens to will be matched by a SCHC rule.
+
+
+TODO: This assumes that all ports that the Device listens to will be matched by a SCHC rule. Is this the basic assumption of SCHC that all packets that do not match a rule are rejected? If yes, why do have fragmentation also for uncompressed packets?
 
 TODO: discuss the various Type/Code that are expected to be generated in response to various errors.  
 
@@ -303,11 +310,13 @@ The resulting three behaviors are shown on {{Fig-ICMPv6-ping}} and described bel
 {: #Fig-ICMPv6-ping title='Examples of ICMPv6 Echo Request/Reply'}
 
 * Code = 0: The Echo Request message is not propagated on the LPWAN to the Device. If the SCHC C/D finds a rule in the context with the IPv6 address of the Device, it responds with an Echo Reply on behalf of the Device. If no rule is found with that IPv6 address, the SCHC C/D does not respond. 
+
 TODO: again, we are assuming that no compression rule is equivalent to the device not providing the service.
 
 * Code = 1: the SCHC C/D queries the NGW (or maintains a local database) and answers with
 the number of seconds since the Device last transmission.
-TODO: what does it mean to respond "with the number of seconds ..."? There is no such field in an Echo Reply message. Do we overwrite one of the fields (Identifier, Sequencer Number, Data)? They are all supposed to be copied from the Echo Request. Do we change their definition with Code==1 or Code==2?
+
+TODO: what does it mean to answer "with the number of seconds ..."? There is no such field in an Echo Reply message. Do we overwrite one of the fields (Identifier, Sequencer Number, Data)? They are all supposed to be copied from the Echo Request. Do we change their definition with Code==1 or Code==2?
 
 * Code =  2: the SCHC C/D compresses the ICMPv6 message and forwards it to the Device. The Echo Reply message sent by the Device is also compressed.
 Since the Echo Request message comes from the Internet, the values of the Identifier, Sequence Number and Data fields cannot be known in advance, and therefore must be transmitted.
@@ -317,13 +326,60 @@ Therefore, the Echo Request message can be assumed to have the same content as r
 
 # Traceroute
 
+The traceroute6 program sends succesive probe packets destined to a chosen target
+but with the Hop Limit value succesively incremented from the initial value 1.
+
+It expects to receive a "Time Exceeded" (Type = 3) "Hop Limit" (Code = 0) ICMPv6 error message back from the successive routers along the path to the destination.
+
+The probe packet is usually a UDP datagram, but can also be a TCP datagram or even an ICMPv6 message.
+The destination port is chosen in the unassigned range in hope that the destination, when eventually reached,
+will respond with a "Destination Unreachable" (Type = 1) "Port Unreachable" (Code = 4) ICMPv6 error message.
+
+It is not anticipated that a Device will want to traceroute a destination on the Internet.
+
+By contrast, a host on the Internet may attempt to traceroute an IPv6 address that is assigned to an LPWAN device. This is described in {{Fig-traceroute}}.
+
+~~~~
+
+     Device       NGW     core SCHC C/D                 Internet 
+
+       |           |            | Hop Limit=1, Dest Port=XXX |
+       |           |            |<---------------------------|
+       |           |            |                            |
+       |           |            |--------------------------->|
+       |           |            |   ICMPv6 Hop Limit error   |
+       |           |            |                            |
+       |           |            |                            |
+       |           |            | Hop Limit=2, Dest Port=XXX |
+       |           |            |<---------------------------|
+       |           |            |                            |
+       |           |            |--------------------------->|
+       |           |            |  ICMPv6 Port Unreachable   |
+
+
+~~~~
+{: #Fig-traceroute title='Example of traceroute to the LPWAN Device'}
+
+
+When the probe packet first reaches the core SCHC C/D, its remaining Hop Limit is 1. The core SCHC C/D will
+respond back with a "Time Exceeded" (Type = 3) "Hop Limit" (Code = 0) ICMPv6 error message.
+Later on, when the probe packet reaches the code SCHC C/D with a Hop Limit value of 2, the core SCHC C/D will,
+as explained in {{ProxyErrMsg}}, answer back with a "Destination Unreachable" (Type = 1) "Port Unreachable" (Code = 4) ICMPv6 error message.
+This is what the traceroute6 command expects.
+Therefore, the traceroute6 command will work with LPWAN IPv6 destinations, except for the time displayed for the destination, which is actually the time to its proxy.
+
+However, if the probe packet happens to hit a port that matches a SCHC rule for that Device, the packet will be compressed with this rule and sent over the LPWAN, which is unfortunate.
+Forwarding of packets to the Device over the LPWAN should only be done from authenticated/trusted sources anyway.
+Rate-limitation on top of authentication will mitigate this nuisance.
+
+
 # Security considerations
 
 TODO
 
 # IANA Considerations
 
-This document has no actions for IANA.
+TODO
 
 
 --- back
