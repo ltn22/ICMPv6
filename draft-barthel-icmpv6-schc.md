@@ -268,7 +268,7 @@ This message bears the same format as the Echo Request message but with Type = 1
 
 {{RFC4443}} states that the Identifier, Sequence Number and Data fields of the Echo Reply message shall contain the same values as the invoking Echo Request message. Therefore, a rule shall be used similar to that used for compressing the Echo Request message.
 
-TODO: how about a shared rule for Echo Request and Echo Reply with an LSB(1) CDA on the Type field?
+TODO: how about a shared rule for Echo Request and Echo Reply with an LSB(1) CDA on the Type field? Or exploiting the Up/Down direction field in the rule?
 
 ## Device is ping'ed
 
