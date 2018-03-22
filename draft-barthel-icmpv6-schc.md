@@ -1,7 +1,7 @@
 ---
 stand_alone: true
 ipr: trust200902
-docname: draft-barthel-icmpv6-schc-00
+docname: draft-barthel-icmpv6-schc-01
 cat: info
 pi:
   symrefs: 'yes'
@@ -40,11 +40,28 @@ author:
   city: 35510 Cesson-Sevigne Cedex
   country: France
   email: arun@ackl.io  
+- ins: D. Dujovne
+  name: Diego Dujovne
+  org: EIT UDP
+  street:
+  - xxxx
+  city: Santiago
+  country: Chile
+  email: diego.dujovne@mail.udp.cl
+- ins: J.C. Zuniga
+  name: Juan Carlos Zuniga
+  org: Sigfox
+  street:
+  - xxx
+  city: Labege
+  country: France
+  email: juancarlos.zuniga@sigfox.com
 normative:
   RFC2119:
   RFC4443:
   RFC4861:
   RFC4884:
+  RFC6291:
   RFC8174:
   RFC8200:
   I-D.ietf-lpwan-ipv6-static-context-hc:
@@ -53,15 +70,20 @@ informative:
 
 --- abstract
 
-ICMPv6 is a companion protocol to IPv6.
-It defines messages that inform the source of IPv6 packets of errors
+OAM {{RFC6291}} bla-bla-bla.
+
+With IP protocols now generalizing to constrained networks, users expect to be able to Operate, Administer and Maintain them with the familiar tools and protocols they already use on less constrained networks.
+
+The primitive functionalities of OAM are achieved with the ICMPv6 protocol.
+
+ICMPv6 defines messages that inform the source of IPv6 packets of errors
 during packet delivery.
 It also defines the Echo Request/Reply messages that are used for basic network troubleshooting (ping command).
 ICMPv6 messages are transported on IPv6.
 
 
 This document describes
-how to adapt ICMPv6 to Low Power Wide Area Networks (LPWANs) by compressing ICMPv6/IPv6 headers
+how basic OAM is performed on Low Power Wide Area Networks (LPWANs) by compressing ICMPv6/IPv6 headers
 and by protecting the LPWAN network and the Device from undesirable ICMPv6 traffic.
 
 
