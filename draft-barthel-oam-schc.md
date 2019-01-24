@@ -297,9 +297,8 @@ If the Device is ping'ed (i.e., is the destination of an Echo Request message), 
 propagating the Echo Request message over the LPWAN.
 
 This is the recommended behavior with the Code 0 (default value) of the Echo Request message.
-In addition, this document defines two other Code values to achieve two other behaviors.
 
-The resulting three behaviors are shown on {{Fig-ICMPv6-ping}} and described below:
+The resulting behavior is shown on {{Fig-ICMPv6-ping}} and described below:
 
 
 ~~~~
@@ -311,21 +310,7 @@ The resulting three behaviors are shown on {{Fig-ICMPv6-ping}} and described bel
        |           |            |                            |
        |           |            |--------------------------->|
        |           |            |    Echo Reply,   Code=0    |
-       |           |            |                            |
-       |           |            |    Echo Request, Code=1    |
-       |           |<==========>|<---------------------------|
-       |           |            |                            |
-       |           |            |--------------------------->|
-       |           |            |    Echo Reply,   Code=1    |
-       |           |            |    last seen               |
-       |           |            |                            |
-       |           |            |    Echo Request, Code=2    |
-       |<~~~~~~~~~~|------------|<---------------------------|
-       |           |            |                            |
-       |~~~~~~~~~~~|----------->|--------------------------->|
-       |           |            |    Echo Reply,   Code=2    |
-       |           |            |    last seen               |
-       |           |            |                            |
+
 
 ~~~~
 {: #Fig-ICMPv6-ping title='Examples of ICMPv6 Echo Request/Reply'}
@@ -334,15 +319,6 @@ The resulting three behaviors are shown on {{Fig-ICMPv6-ping}} and described bel
 
 TODO: again, we are assuming that no compression rule is equivalent to the device not providing the service.
 
-* Code = 1: the SCHC C/D queries the NGW (or maintains a local database) and answers with
-the number of seconds since the Device last transmission.
-
-TODO: what does it mean to answer "with the number of seconds ..."? There is no such field in an Echo Reply message. Do we overwrite one of the fields (Identifier, Sequencer Number, Data)? They are all supposed to be copied from the Echo Request. Do we change their definition with Code==1 or Code==2?
-
-* Code =  2: the SCHC C/D compresses the ICMPv6 message and forwards it to the Device. The Echo Reply message sent by the Device is also compressed.
-Since the Echo Request message comes from the Internet, the values of the Identifier, Sequence Number and Data fields cannot be known in advance, and therefore must be transmitted.
-However, it is likely that the Echo Request with Code 2 will be firewalled from the Internet and restricted to authorized users.
-Therefore, the Echo Request message can be assumed to have the same content as recommended in {{DevicePings}}, and the same compression rules apply.
 
 
 # Traceroute
