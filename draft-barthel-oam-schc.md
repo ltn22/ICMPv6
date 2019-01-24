@@ -35,8 +35,7 @@ author:
 - ins: A. Kandasamy
   name: Arunprabhu Kandasamy
   org: Acklio
-  street:
-  - 2bis rue de la Chataigneraie
+  street: 1137A avenue des Champs Blancs
   city: 35510 Cesson-Sevigne Cedex
   country: France
   email: arun@ackl.io  
@@ -48,14 +47,14 @@ author:
   city: Santiago
   country: Chile
   email: diego.dujovne@mail.udp.cl
-- ins: J.C. Zuniga
+- ins: JC. Zuniga
   name: Juan Carlos Zuniga
-  org: Sigfox
+  org: SIGFOX
   street:
-  - xxx
-  city: Labege
+  - 425 rue Jean Rostand
+  - Labege  31670
   country: France
-  email: juancarlos.zuniga@sigfox.com
+  email: JuanCarlos.Zuniga@sigfox.com
 normative:
   RFC2119:
   RFC4443:
