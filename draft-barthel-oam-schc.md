@@ -41,9 +41,8 @@ author:
   email: arun@ackl.io  
 - ins: D. Dujovne
   name: Diego Dujovne
-  org: EIT UDP
-  street:
-  - xxxx
+  org: Escuela de Informatica y Telecomunicaciones - Universidad Diego Portales
+  street: Vergara 432
   city: Santiago
   country: Chile
   email: diego.dujovne@mail.udp.cl
