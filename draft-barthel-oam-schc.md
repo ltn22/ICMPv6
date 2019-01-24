@@ -65,7 +65,7 @@ normative:
   RFC8200:
   I-D.ietf-lpwan-ipv6-static-context-hc:
 informative:
-  I-D.ietf-lpwan-overview:
+  RFC8376:
 
 --- abstract
 
@@ -122,7 +122,7 @@ and other messages used by the Neighbor Discovery Protocol {{RFC4861}}.
 
 This document focuses on using Static Context Header Compression (SCHC) to compress {{RFC4443}} messages that need to be transmitted over the LPWAN network, and on having the LPWAN gateway proxying the Device to save it the unwanted traffic.
 
-LPWANs' salient characteristics are described in {{I-D.ietf-lpwan-overview}}
+LPWANs' salient characteristics are described in {{RFC8376}}.
 
 # Terminology
 
