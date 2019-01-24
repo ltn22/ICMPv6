@@ -69,9 +69,25 @@ informative:
 
 --- abstract
 
-OAM {{RFC6291}} bla-bla-bla.
-
 With IP protocols now generalizing to constrained networks, users expect to be able to Operate, Administer and Maintain them with the familiar tools and protocols they already use on less constrained networks.
+
+OAM {{RFC6291}} uses specific messages sent into the data plane to measure some parameters of a network.
+Most of the time, no explicit values are sent is these messages.
+Network parameters are obtained from the analysis of these specific messages.
+
+This can be used:
+
+- To detect if a host id up or down.
+- To measure the RTT and its variation other the time.
+- To learn the path used by packets to reach a destination.
+
+OAM in LPWAN is a little bit trickier since the bandwidth is limited and
+extra traffic added by OAM can introduce perturbation on regular transmission.
+
+Two scenarios can be investigated:
+
+- OAM coming from internet. In that case, the NGW should act as a proxy and handle specifically the OAM traffic.
+- OAM coming from LPWAN devices: This can be included into regular devices but some specific devices may be installed in the LPWAN network to measure its quality.
 
 The primitive functionalities of OAM are achieved with the ICMPv6 protocol.
 
