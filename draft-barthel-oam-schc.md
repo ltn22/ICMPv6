@@ -25,7 +25,7 @@ author:
   email: dominique.barthel@orange.com
 - ins: L. Toutain
   name: Laurent Toutain
-  org: Institut MINES TELECOM; IMT Atlantique
+  org: IMT-Atlantique
   street:
   - 2 rue de la Chataigneraie
   - CS 17607
@@ -41,7 +41,7 @@ author:
   email: arun@ackl.io  
 - ins: D. Dujovne
   name: Diego Dujovne
-  org: Escuela de Informatica y Telecomunicaciones - Universidad Diego Portales
+  org: Universidad Diego Portales
   street: Vergara 432
   city: Santiago
   country: Chile
@@ -70,7 +70,7 @@ informative:
 
 With IP protocols now generalizing to constrained networks, users expect to be able to Operate, Administer and Maintain them with the familiar tools and protocols they already use on less constrained networks.
 
-OAM {{RFC6291}} uses specific messages sent into the data plane to measure some parameters of a network.
+OAM uses specific messages sent into the data plane to measure some parameters of a network.
 Most of the time, no explicit values are sent is these messages.
 Network parameters are obtained from the analysis of these specific messages.
 
@@ -105,6 +105,8 @@ and by protecting the LPWAN network and the Device from undesirable ICMPv6 traff
 
 
 # Introduction
+
+The primitive functionalities of OAM {{RFC6291}} are achieved with the ICMPv6 protocol.
 
 ICMPv6 {{RFC4443}} is a companion protocol to IPv6 {{RFC8200}}.
 
