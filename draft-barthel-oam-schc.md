@@ -76,8 +76,8 @@ Network parameters are obtained from the analysis of these specific messages.
 
 This can be used:
 
-- To detect if a host id up or down.
-- To measure the RTT and its variation other the time.
+- To detect if a host is up or down.
+- To measure the RTT and its variation over time.
 - To learn the path used by packets to reach a destination.
 
 OAM in LPWAN is a little bit trickier since the bandwidth is limited and
