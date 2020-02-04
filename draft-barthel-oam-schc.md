@@ -185,10 +185,19 @@ as destination port is not "known" (needs better definition) from the core SCHC 
 the LPWAN and having this packet rejected by the Device, the core SCHC C/D issues
 an ICMPv6 error message "Destination Unreachable" (Type 1) with Code 1 ("Port Unreachable") on behalf of the Device.
 
+In that case the SCHC C/D acts as a router and MUST have a routable IPv6 address to generate
+an ICMPv6 message. when compressing a packet containing an IPv6 header, no compression rules are found and:
+* if a rule contains some extension headers, a parameter problem may be generated (type 4),
+* no rules contains the IPv6 prefix, a no route to destination ICMPv6  message (type 0, code 0) may be generated,
+* a prefix is found, but no devIID matches, a address unreachable ICMPv6  message (type 0, code 3) may be generated,
+* a device IPv6 address is found, but no port matches,  a port unreachable ICMPv6  message (type 0, code 4) may be generated,
+
 
 TODO: This assumes that all ports that the Device listens to will be matched by a SCHC rule. Is this the basic assumption of SCHC that all packets that do not match a rule are rejected? If yes, why do have fragmentation also for uncompressed packets?
 
 TODO: discuss the various Type/Code that are expected to be generated in response to various errors.  
+
+
 
 ## Device is the destination of an ICMPv6 error message
 
@@ -251,6 +260,7 @@ bits. Code can be reduced to 3 bits using the LSB CDA. Value can be sent on 11 b
 CDA, but if the Device is known to send smaller packets, then the size of this field can
 be further reduced.
 
+
 By {{RFC4443}}, the rest of the ICMPv6 message must contain as much as possible of the IPv6 offending (invoking) packet that triggered
 this ICMPv6 error message. This information is used to try and identify the SCHC rule that
 was used to decompress the offending IPv6 packet. If the rule can be found then the Rule Id
@@ -308,12 +318,33 @@ This message bears the same format as the Echo Request message but with Type = 1
 
 TODO: how about a shared rule for Echo Request and Echo Reply with an LSB(1) CDA on the Type field? Or exploiting the Up/Down direction field in the rule?
 
+### Rule example
+
+The following rule gives an example of a SCHC compression. The type can be elided if the direction is taken into account. Identifier is ignored and generated as 0 at decompression. This implies that a signle ping can be launched at the same time on a device. Finally, only the 8 less significant bits of the sequence number is sent on the LPWAN, allowing a serie of 255 consecutive pings.
+
+~~~~~
+ +----------------+--+--+--+---------+--------+------------++------+
+ | Field          |FL|FP|DI| Value   | Match  | Comp Decomp|| Sent |
+ |                |  |  |  |         | Opera. | Action     ||[bits]|
+ +----------------+--+--+--+---------+---------------------++------+
+ |ICMPv6 Type     |8 |1 |Up|128      | equal  | not-sent   ||      |
+ |ICMPv6 Type     |8 |1 |Dw|129      | equal  | not-sent   ||      |
+ |ICMPv6 Code     |8 |1 |Bi|0        | equal  | not-sent   ||      |
+ |ICMPv6 Identif. |16|1 |Bi|0        | ignore | not-sent   ||      |
+ |ICMPv6 Sequence |16|1 |Bi|0        | MSB(24)| LSB        ||  8   |
+ +================+==+==+==+=========+========+============++======+
+ ~~~~~
+ {: #Fig-ping-up title='Example of compression rule for a ping from the device'}
+
+
 ## Device is ping'ed
 
 If the Device is ping'ed (i.e., is the destination of an Echo Request message), the default behavior is to avoid
 propagating the Echo Request message over the LPWAN.
 
-This is the recommended behavior with the Code 0 (default value) of the Echo Request message.
+<!--This is the recommended behavior with the Code 0 (default value) of the Echo Request message.-->
+
+This is done by proxying the ping request on the core SCHC C/D. This require to add an action when the rule is selected. Instead of been processed by the compressor, the packet description is processed by a ping proxy. The rule is used for the selection, so CDA are not necessary.  
 
 The resulting behavior is shown on {{Fig-ICMPv6-ping}} and described below:
 
@@ -332,11 +363,29 @@ The resulting behavior is shown on {{Fig-ICMPv6-ping}} and described below:
 ~~~~
 {: #Fig-ICMPv6-ping title='Examples of ICMPv6 Echo Request/Reply'}
 
-* Code = 0: The Echo Request message is not propagated on the LPWAN to the Device. If the SCHC C/D finds a rule in the context with the IPv6 address of the Device, it responds with an Echo Reply on behalf of the Device. If no rule is found with that IPv6 address, the SCHC C/D does not respond. 
+<!--* Code = 0: The Echo Request message is not propagated on the LPWAN to the Device. If the SCHC C/D finds a rule in the context with the IPv6 address of the Device, it responds with an Echo Reply on behalf of the Device. If no rule is found with that IPv6 address, the SCHC C/D does not respond. 
 
-TODO: again, we are assuming that no compression rule is equivalent to the device not providing the service.
+TODO: again, we are assuming that no compression rule is equivalent to the device not providing the service. -->
 
+## rule example
 
+The following rule shows an example of a compression rule for pinging a device. 
+
+~~~~~
+ +----------------+--+--+--+---------+--------+------------++------+
+ | Field          |FL|FP|DI| Value   | Match  | Comp Decomp|| Sent |
+ |                |  |  |  |         | Opera. | Action     ||[bits]|
+ +----------------+--+--+--+---------+---------------------++------+
+ |ICMPv6 Type     |8 |1 |Dw|128      | equal  | not-sent   ||      |
+ |ICMPv6 Type     |8 |1 |Uo|129      | equal  | not-sent   ||      |
+ |ICMPv6 Code     |8 |1 |Bi|0        | equal  | not-sent   ||      |
+ |ICMPv6 Identif. |16|1 |Bi|0        | ignore | value-sent ||      |
+ |ICMPv6 Sequence |16|1 |Bi|0        | MSB(24)| LSB        ||  8   |
+ +================+==+==+==+=========+========+============++======+
+ ~~~~~
+ {: #Fig-ping-down title='Example of compression rule for a ping to a device'}
+
+In this example, type and code are elided, the identifer has to be sent, and the sequence number is limited to one byte.
 
 # Traceroute
 
