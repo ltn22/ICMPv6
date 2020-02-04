@@ -367,7 +367,7 @@ The resulting behavior is shown on {{Fig-ICMPv6-ping}} and described below:
 
 TODO: again, we are assuming that no compression rule is equivalent to the device not providing the service. -->
 
-## rule example
+### Rule example
 
 The following rule shows an example of a compression rule for pinging a device. 
 
