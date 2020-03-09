@@ -1,7 +1,7 @@
 ---
 stand_alone: true
 ipr: trust200902
-docname: draft-barthel-oam-schc-01
+docname: draft-barthel-lpwan-oam-schc-01
 cat: info
 pi:
   symrefs: 'yes'
