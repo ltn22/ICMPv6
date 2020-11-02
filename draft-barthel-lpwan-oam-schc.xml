@@ -205,7 +205,7 @@ appear in all capitals, as shown here.</t>
 </section>
 
 <section anchor="use-cases">
-<name>Uses cases</name>
+<name>Use cases</name>
 
 <t>In the LPWAN architecture, we can distinguish the following cases:</t>
 
@@ -272,18 +272,92 @@ This implies that only one single ping can be launched at any given time on a de
 Finally, only the least significant 8 bits of the sequence number are sent on the LPWAN,
 allowing a serie of 255 consecutive pings.</t>
 
-<figure title="Example of compression rule for a ping from the device" anchor="Fig-ping-up"><artwork><![CDATA[
- +----------------+--+--+--+---------+--------+------------++------+
+<table anchor="Fig-ping-up" align="center">
+  <name>Example of compression rule for a ping from the device</name>
+  <thead>
+    <tr>
+      <th align="left">Field</th>
+      <th align="left">FL</th>
+      <th align="left">FP</th>
+      <th align="left">DI</th>
+      <th align="left">Value</th>
+      <th align="left">Matching Operator</th>
+      <th align="left">CDA</th>
+      <th align="left"></th>
+      <th align="left">Sent bits</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="left">ICMPv6 Type</td>
+      <td align="left">8</td>
+      <td align="left">1</td>
+      <td align="left">Up</td>
+      <td align="left">128</td>
+      <td align="left">equal</td>
+      <td align="left">not-sent</td>
+      <td align="left"></td>
+      <td align="left"></td>
+    </tr>
+    <tr>
+      <td align="left">ICMPv6 Type</td>
+      <td align="left">8</td>
+      <td align="left">1</td>
+      <td align="left">Dw</td>
+      <td align="left">129</td>
+      <td align="left">equal</td>
+      <td align="left">not-sent</td>
+      <td align="left"></td>
+      <td align="left"></td>
+    </tr>
+    <tr>
+      <td align="left">ICMPv6 Code</td>
+      <td align="left">8</td>
+      <td align="left">1</td>
+      <td align="left">Bi</td>
+      <td align="left">0</td>
+      <td align="left">equal</td>
+      <td align="left">not-sent</td>
+      <td align="left"></td>
+      <td align="left"></td>
+    </tr>
+    <tr>
+      <td align="left">ICMPv6 Identifier</td>
+      <td align="left">16</td>
+      <td align="left">1</td>
+      <td align="left">Bi</td>
+      <td align="left">0</td>
+      <td align="left">ignore</td>
+      <td align="left">not-sent</td>
+      <td align="left"></td>
+      <td align="left"></td>
+    </tr>
+    <tr>
+      <td align="left">ICMPv6 Sequence</td>
+      <td align="left">16</td>
+      <td align="left">1</td>
+      <td align="left">Bi</td>
+      <td align="left">0</td>
+      <td align="left">MSB(24)</td>
+      <td align="left">LSB</td>
+      <td align="left"></td>
+      <td align="left">8</td>
+    </tr>
+  </tbody>
+</table>
+
+<!--figure title="Example of compression rule for a ping from the device" anchor="Fig-ping-up"><artwork><![CDATA[
+
  | Field          |FL|FP|DI| Value   | Match  | Comp Decomp|| Sent |
  |                |  |  |  |         | Opera. | Action     ||(bits)|
- +----------------+--+--+--+---------+---------------------++------+
+
  |ICMPv6 Type     |8 |1 |Up|128      | equal  | not-sent   ||      |
  |ICMPv6 Type     |8 |1 |Dw|129      | equal  | not-sent   ||      |
  |ICMPv6 Code     |8 |1 |Bi|0        | equal  | not-sent   ||      |
  |ICMPv6 Identif. |16|1 |Bi|0        | ignore | not-sent   ||      |
  |ICMPv6 Sequence |16|1 |Bi|0        | MSB(24)| LSB        ||  8   |
  +================+==+==+==+=========+========+============++======+
-]]></artwork></figure>
+]]></artwork></figure-->
 
 </section>
 </section>
@@ -322,18 +396,92 @@ TODO: again, we are assuming that no compression rule is equivalent to the devic
 
 <t>The following rule shows an example of a compression rule for pinging a device.</t>
 
-<figure title="Example of compression rule for a ping to a device" anchor="Fig-ping-down"><artwork><![CDATA[
- +----------------+--+--+--+---------+--------+------------++------+
+<table anchor="Fig-ping-down" align="center">
+  <name>Example of compression rule for a ping to a device</name>
+  <thead>
+    <tr>
+      <th align="left">Field</th>
+      <th align="left">FL</th>
+      <th align="left">FP</th>
+      <th align="left">DI</th>
+      <th align="left">Value</th>
+      <th align="left">Matching Operator</th>
+      <th align="left">CDA</th>
+      <th align="left"></th>
+      <th align="left">Sent bits</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="left">ICMPv6 Type</td>
+      <td align="left">8</td>
+      <td align="left">1</td>
+      <td align="left">Dw</td>
+      <td align="left">128</td>
+      <td align="left">equal</td>
+      <td align="left">not-sent</td>
+      <td align="left"></td>
+      <td align="left"></td>
+    </tr>
+    <tr>
+      <td align="left">ICMPv6 Type</td>
+      <td align="left">8</td>
+      <td align="left">1</td>
+      <td align="left">Up</td>
+      <td align="left">129</td>
+      <td align="left">equal</td>
+      <td align="left">not-sent</td>
+      <td align="left"></td>
+      <td align="left"></td>
+    </tr>
+    <tr>
+      <td align="left">ICMPv6 Code</td>
+      <td align="left">8</td>
+      <td align="left">1</td>
+      <td align="left">Bi</td>
+      <td align="left">0</td>
+      <td align="left">equal</td>
+      <td align="left">not-sent</td>
+      <td align="left"></td>
+      <td align="left"></td>
+    </tr>
+    <tr>
+      <td align="left">ICMPv6 Identifier</td>
+      <td align="left">16</td>
+      <td align="left">1</td>
+      <td align="left">Bi</td>
+      <td align="left">0</td>
+      <td align="left">ignore</td>
+      <td align="left">not-sent</td>
+      <td align="left"></td>
+      <td align="left"></td>
+    </tr>
+    <tr>
+      <td align="left">ICMPv6 Sequence</td>
+      <td align="left">16</td>
+      <td align="left">1</td>
+      <td align="left">Bi</td>
+      <td align="left">0</td>
+      <td align="left">MSB(24)</td>
+      <td align="left">LSB</td>
+      <td align="left"></td>
+      <td align="left">8</td>
+    </tr>
+  </tbody>
+</table>
+
+<!--figure title="Example of compression rule for a ping to a device" anchor="Fig-ping-down"><artwork><![CDATA[
+
  | Field          |FL|FP|DI| Value   | Match  | Comp Decomp|| Sent |
  |                |  |  |  |         | Opera. | Action     ||(bits)|
- +----------------+--+--+--+---------+---------------------++------+
+
  |ICMPv6 Type     |8 |1 |Dw|128      | equal  | not-sent   ||      |
- |ICMPv6 Type     |8 |1 |Uo|129      | equal  | not-sent   ||      |
+ |ICMPv6 Type     |8 |1 |Up|129      | equal  | not-sent   ||      |
  |ICMPv6 Code     |8 |1 |Bi|0        | equal  | not-sent   ||      |
  |ICMPv6 Identif. |16|1 |Bi|0        | ignore | value-sent ||      |
  |ICMPv6 Sequence |16|1 |Bi|0        | MSB(24)| LSB        ||  8   |
  +================+==+==+==+=========+========+============++======+
-]]></artwork></figure>
+]]></artwork></figure-->
 
 <t>In this example, type and code are elided, the identifer has to be sent, and the sequence number is limited to one byte.</t>
 
