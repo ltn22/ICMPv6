@@ -9,7 +9,7 @@
 <rfc
       xmlns:xi="http://www.w3.org/2001/XInclude"
       category="info"
-      docName="draft-barthel-lpwan-oam-schc-02"
+      docName="draft-barthel-lpwan-oam-schc-04"
       ipr="trust200902"
       obsoletes=""
       updates=""
@@ -34,7 +34,7 @@
         full title is longer than 39 characters -->
 
   <title abbrev="SCHC OAM for LPWAN">OAM for LPWAN using Static Context Header Compression (SCHC)</title>
-  <seriesInfo name="Internet-Draft" value="draft-barthel-lpwan-oam-schc-02"/>
+  <seriesInfo name="Internet-Draft" value="draft-barthel-lpwan-oam-schc-03"/>
 
   <!-- add 'role="editor"' below for the editors if appropriate -->
   <!--author fullname="Dominique Barthel" initials="D." role="editor" surname="Barthel"-->
@@ -92,19 +92,20 @@
   </author>
 
   <author fullname="Juan Carlos Zuniga" initials="JC." surname="Zuniga">
-    <organization>SIGFOX</organization>
+    <organization>Cisco</organization>
     <address>
       <postal>
-        <street>425 rue Jean Rostand</street>
-        <city>Labege</city>
-        <code>31670</code>
-        <country>France</country>
+        <street></street>
+        <city>Montreal QC</city>
+        <code></code>
+        <country>Canada</country>
       </postal>
-      <email>JuanCarlos.Zuniga@sigfox.com</email>
+      <email>juzuniga@cisco.com</email>
     </address>
   </author>
 
-  <date year="2021"/>
+  <date year="2022"/>
+
   <!-- If the month and year are both specified and are the current ones, xml2rfc will fill 
         in the current day for you. If only the current year is specified, xml2rfc will fill 
 	in the current day and month for you. If the year is not the current one, it is 
