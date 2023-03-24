@@ -9,7 +9,7 @@
 <rfc
       xmlns:xi="http://www.w3.org/2001/XInclude"
       category="info"
-      docName="draft-barthel-lpwan-oam-schc-03"
+      docName="draft-barthel-lpwan-oam-schc-04"
       ipr="trust200902"
       obsoletes=""
       updates=""
@@ -92,15 +92,15 @@
   </author>
 
   <author fullname="Juan Carlos Zuniga" initials="JC." surname="Zuniga">
-    <organization>SIGFOX</organization>
+    <organization>Cisco</organization>
     <address>
       <postal>
-        <street>425 rue Jean Rostand</street>
-        <city>Labege</city>
-        <code>31670</code>
-        <country>France</country>
+        <street></street>
+        <city>Montreal QC</city>
+        <code></code>
+        <country>Canada</country>
       </postal>
-      <email>JuanCarlos.Zuniga@sigfox.com</email>
+      <email>juzuniga@cisco.com</email>
     </address>
   </author>
 
