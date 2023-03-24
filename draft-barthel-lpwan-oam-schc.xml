@@ -105,6 +105,7 @@
   </author>
 
   <date year="2022"/>
+
   <!-- If the month and year are both specified and are the current ones, xml2rfc will fill 
         in the current day for you. If only the current year is specified, xml2rfc will fill 
 	in the current day and month for you. If the year is not the current one, it is 
@@ -128,7 +129,7 @@
         keywords will be used for the search engine. -->
 
   <abstract>
-    <t>With IP protocols now generalizing to constrained networks, users expect to be able to Operate, Administer and Maintain them 
+    <t>With IP protocols now generalizing to constrained networks, users expect to be able to Operate, Administer and Maintain the latter 
     with the familiar tools and protocols they already use on less constrained networks.</t>
 
     <t>OAM uses specific messages sent into the data plane to measure some parameters of a network.
@@ -139,23 +140,23 @@
 
     <ul>
       <li>To detect if a host is up or down.</li>
-      <li>To measure the RTT and its variation over time.</li>
+      <li>To measure the Round Trip Time (RTT) and its variation over time.</li>
       <li>To learn the path used by packets to reach a destination.</li>
     </ul>
 
     <t>OAM in LPWAN is a little bit trickier since the bandwidth is limited and
-    extra traffic added by OAM can introduce perturbation on regular transmission.</t>
+    extra traffic added by OAM can introduce perturbation on regular data transmission.</t>
 
     <t>Two scenarios can be investigated:</t>
 
     <ul>
-      <li>OAM coming from internet. In that case, the NGW should act as a proxy and handle specifically the OAM traffic.</li>
-      <li>OAM coming from LPWAN devices: This can be included into regular devices but some specific devices may be installed in the LPWAN network to measure its quality.</li>
+      <li>OAM coming from the internet: As much as possible, the Network Gateway (NGW) should act as a proxy and handle the OAM traffic specifically.</li>
+      <li>OAM coming from LPWAN devices: This can be considered as regular devices but some specific devices may be installed in the LPWAN network to measure its quality.</li>
     </ul>
 
     <t>The primitive functionalities of OAM are achieved with the ICMPv6 protocol.</t>
 
-    <t>ICMPv6 defines messages that inform the source of IPv6 packets of errors during packet delivery.
+    <t>ICMPv6 defines messages that inform the source of IPv6 packets about errors that happened during packet delivery.
     It also defines the Echo Request/Reply messages that are used for basic network troubleshooting (ping command).
     ICMPv6 messages are transported on IPv6.</t>
 
@@ -186,7 +187,7 @@ Destination Unreachable, Packet Too Big, Time Exceeded and Parameter Problem.</t
 <t>Other ICMPv6 messages are defined in other RFCs, such as an extended format of the same messages <xref target="RFC4884"/>
 and other messages used by the Neighbor Discovery Protocol <xref target="RFC4861"/>.</t>
 
-<t>This document focuses on using Static Context Header Compression (SCHC) to compress <xref target="RFC4443"/> messages that need to be transmitted over the LPWAN network, and on having the LPWAN gateway proxying the Device to save it the unwanted traffic.</t>
+<t>This document focuses on using Static Context Header Compression (SCHC) <xref target="RFC8724"/> to compress <xref target="RFC4443"/> messages that need to be transmitted over the LPWAN network, and on having the LPWAN gateway proxying the Device to save it the unwanted traffic.</t>
 
 <t>LPWANs’ salient characteristics are described in <xref target="RFC8376"/>.</t>
 </section>
@@ -212,10 +213,15 @@ appear in all capitals, as shown here.</t>
 <ul spacing="normal">
   <li>the Device is the originator of an Echo Request message, and therefore the destination of the Echo Reply message.</li>
   <li>the Device is the destination of an Echo Request message, and therefore the purported source of an Echo Reply message.</li>
-  <li>the Device is the (purported) source of an ICMP error message, mainly in response to an incorrect incoming IPv6
-message, or in response to a ping request. In this case, as much as possible, the core SCHC C/D should act as a proxy and originate the ICMP message, so that the Device and the LPWAN network are protected from this unwanted traffic.</li>
+  <li>there is no Device matching the destination address of an incoming IPv6 packet (traveling downward).
+	  TODO: should the SCHC C/D act as a router and send back an ICMP error message (Destination Unreachable)? Which source address should it use?</li>
+  <li>the Device is the actual source of an ICMP error message in response to an incorrect incoming IPv6 message that was forwarded to it over the LPWAN.
+	  In this case, we may want to compress the ICMP error message for transmission over the LPWAN.</li>
+  <li>the Device is the purported source of an ICMP error message, mainly in response to an incorrect incoming IPv6 packet from the internet.
+	  In this case, as much as possible, the core SCHC C/D should act as a proxy and originate the ICMP message,
+	  so that the Device and the LPWAN network are protected from this unwanted traffic.</li>
   <li>the Device is the destination of the ICMP message, mainly in response to a
-packet sent by the Device to the network that generates an error. In this case, we want the ICMP message to reach the Device, and this document describes in <xref target="ErrMsgCompr"/> what SCHC compression should be applied.</li>
+	  packet sent by the Device, where the packet generates an error in the network. In this case, we want the ICMP message to reach the Device.</li>
 </ul>
 
 <t>These cases are further described in <xref target="DetailedBehavior"/>.</t>
@@ -251,29 +257,30 @@ packet sent by the Device to the network that generates an error. In this case, 
 “aid in matching Echo Replies to this Echo Request” and that they “may be zero”.
 Data is “zero or more bytes of arbitrary data”.</t>
 
-<t>We recommend that Identifier be zero, Sequence Number be a counter on 3 bits, and Data be zero bytes (absent). Therefore, Identifier is elided with the not-sent CDA, Sequence Number is transmitted on 3 bits with the LSB CDA and no Data is transmitted.</t>
+<t>Assuming that a constrained IoT device will only run one Ping process at a time,
+we recommend that Identifier be zero, Sequence Number be a counter on 3 bits, and Data be zero bytes (i.e., absent).
+Therefore, Identifier is elided with the not-sent CDA, Sequence Number is transmitted on 3 bits with the LSB CDA and no Data is transmitted.</t>
 
-<t>The transmission cost of the Echo Request message is therefore the size of the Rule Id + 3 bits.</t>
+<t>The transmission cost of the Echo Request message is therefore the size of the RuleID + 3 bits.</t>
 
-<t>When the destination receives the Echo Request message, it will respond back with a Echo Reply message.
+<t>When the destination receives the Echo Request message, it will respond back with an Echo Reply message.
 This message bears the same format as the Echo Request message but with Type = 129
 (see <xref target="Fig-ICMPv6-Echo-Request"/>).</t>
 
-<t><xref target="RFC4443"/> states that the Identifier, Sequence Number and Data fields of the Echo Reply message shall contain the same values as the invoking Echo Request message. Therefore, a rule shall be used similar to that used for compressing the Echo Request message.</t>
-
-<t>TODO: how about a shared rule for Echo Request and Echo Reply with an LSB(1) CDA on the Type field? Or exploiting the Up/Down direction field in the rule?</t>
+<t><xref target="RFC4443"/> states that the Identifier, Sequence Number and Data fields of the Echo Reply message shall contain the same values as the invoking Echo Request message.
+Therefore, a rule shall be used similar to that used for compressing the Echo Request message.</t>
 
 <section anchor="rule-example" title="Rule example">
 
-<t>The following rule gives an example of a SCHC compression.
-The type can be elided if the direction is taken into account.
-Identifier is ignored and generated as 0 at decompression.
-This implies that only one single ping can be launched at any given time on a device.
-Finally, only the least significant 8 bits of the sequence number are sent on the LPWAN,
-allowing a serie of 255 consecutive pings.</t>
+<t><xref target="Fig-ping-up"/> provides an example of SCHC compression of an uplink Echo Reply and of the corresponding downlink Echo Reply.
+Even with a single Rule for both directions, the type can be elided in both directions, thanks to the Direction indicator in the Field Descriptor.
+Identifier is ignored and regenerated as 0 at decompression.
+This implies that only one single ping can be launched at any given time on a Device.
+Finally, only the least significant 3 bits of the Sequence Number are sent on the LPWAN,
+allowing for a serie of 8 consecutive pings.</t>
 
 <table anchor="Fig-ping-up" align="center">
-  <name>Example of compression rule for a ping from the device</name>
+  <name>Example of compression rule for a ping from the device to the internet</name>
   <thead>
     <tr>
       <th align="left">Field</th>
@@ -322,6 +329,17 @@ allowing a serie of 255 consecutive pings.</t>
       <td align="left"></td>
     </tr>
     <tr>
+      <td align="left">ICMPv6 Checksum</td>
+      <td align="left">16</td>
+      <td align="left">1</td>
+      <td align="left">Bi</td>
+      <td align="left">0</td>
+      <td align="left">ignore</td>
+      <td align="left">compute-*</td>
+      <td align="left"></td>
+      <td align="left"></td>
+    </tr>
+    <tr>
       <td align="left">ICMPv6 Identifier</td>
       <td align="left">16</td>
       <td align="left">1</td>
@@ -338,26 +356,13 @@ allowing a serie of 255 consecutive pings.</t>
       <td align="left">1</td>
       <td align="left">Bi</td>
       <td align="left">0</td>
-      <td align="left">MSB(24)</td>
+      <td align="left">MSB(13)</td>
       <td align="left">LSB</td>
       <td align="left"></td>
-      <td align="left">8</td>
+      <td align="left">3</td>
     </tr>
   </tbody>
 </table>
-
-<!--figure title="Example of compression rule for a ping from the device" anchor="Fig-ping-up"><artwork><![CDATA[
-
- | Field          |FL|FP|DI| Value   | Match  | Comp Decomp|| Sent |
- |                |  |  |  |         | Opera. | Action     ||(bits)|
-
- |ICMPv6 Type     |8 |1 |Up|128      | equal  | not-sent   ||      |
- |ICMPv6 Type     |8 |1 |Dw|129      | equal  | not-sent   ||      |
- |ICMPv6 Code     |8 |1 |Bi|0        | equal  | not-sent   ||      |
- |ICMPv6 Identif. |16|1 |Bi|0        | ignore | not-sent   ||      |
- |ICMPv6 Sequence |16|1 |Bi|0        | MSB(24)| LSB        ||  8   |
- +================+==+==+==+=========+========+============++======+
-]]></artwork></figure-->
 
 </section>
 </section>
@@ -370,11 +375,11 @@ propagating the Echo Request message over the LPWAN.</t>
 <!--This is the recommended behavior with the Code 0 (default value) of the Echo Request message.-->
 
 <t>This is done by proxying the ping request on the core SCHC C/D.
-This requires to add an action when the rule is selected.
+This requires adding an action when the Rule is selected.
 Instead of been processed by the compressor, the packet description is processed by a ping proxy.
-The rule is used for the selection, so CDAs are not necessary.</t>
+The Rule is only used for the selection, therefore CDAs are not necessary.</t>
 
-<t>The resulting behavior is shown on <xref target="Fig-ICMPv6-ping"/> and described below:</t>
+<t>The resulting behavior is shown on <xref target="Fig-ICMPv6-ping"/>.</t>
 
 <figure title="Examples of ICMPv6 Echo Request/Reply" anchor="Fig-ICMPv6-ping"><artwork><![CDATA[
      Device       NGW     core SCHC C/D                 Internet Host
@@ -394,11 +399,15 @@ TODO: again, we are assuming that no compression rule is equivalent to the devic
 
 <section anchor="rule-example-1" title="Rule example">
 
-<t>The following rule shows an example of a compression rule for pinging a device.</t>
+<t>The following rule shows an example of a proxying rule for a device being ping'ed.</t>
 
 <table anchor="Fig-ping-down" align="center">
-  <name>Example of compression rule for a ping to a device</name>
+  <name>Example of a proxying rule for a device being ping'ed.</name>
   <thead>
+    <tr>
+      <th align="left">Action</th>
+      <td align="left" colspan= "8">Ping Proxy</td>
+    </tr>
     <tr>
       <th align="left">Field</th>
       <th align="left">FL</th>
@@ -419,18 +428,7 @@ TODO: again, we are assuming that no compression rule is equivalent to the devic
       <td align="left">Dw</td>
       <td align="left">128</td>
       <td align="left">equal</td>
-      <td align="left">not-sent</td>
       <td align="left"></td>
-      <td align="left"></td>
-    </tr>
-    <tr>
-      <td align="left">ICMPv6 Type</td>
-      <td align="left">8</td>
-      <td align="left">1</td>
-      <td align="left">Up</td>
-      <td align="left">129</td>
-      <td align="left">equal</td>
-      <td align="left">not-sent</td>
       <td align="left"></td>
       <td align="left"></td>
     </tr>
@@ -441,7 +439,18 @@ TODO: again, we are assuming that no compression rule is equivalent to the devic
       <td align="left">Bi</td>
       <td align="left">0</td>
       <td align="left">equal</td>
-      <td align="left">not-sent</td>
+      <td align="left"></td>
+      <td align="left"></td>
+      <td align="left"></td>
+    </tr>
+    <tr>
+      <td align="left">ICMPv6 Checksum</td>
+      <td align="left">16</td>
+      <td align="left">1</td>
+      <td align="left">Bi</td>
+      <td align="left">0</td>
+      <td align="left">ignore</td>
+      <td align="left"></td>
       <td align="left"></td>
       <td align="left"></td>
     </tr>
@@ -452,7 +461,7 @@ TODO: again, we are assuming that no compression rule is equivalent to the devic
       <td align="left">Bi</td>
       <td align="left">0</td>
       <td align="left">ignore</td>
-      <td align="left">not-sent</td>
+      <td align="left"></td>
       <td align="left"></td>
       <td align="left"></td>
     </tr>
@@ -462,39 +471,37 @@ TODO: again, we are assuming that no compression rule is equivalent to the devic
       <td align="left">1</td>
       <td align="left">Bi</td>
       <td align="left">0</td>
-      <td align="left">MSB(24)</td>
-      <td align="left">LSB</td>
+      <td align="left">ignore</td>
       <td align="left"></td>
-      <td align="left">8</td>
+      <td align="left"></td>
+      <td align="left"></td>
     </tr>
   </tbody>
 </table>
 
-<!--figure title="Example of compression rule for a ping to a device" anchor="Fig-ping-down"><artwork><![CDATA[
-
- | Field          |FL|FP|DI| Value   | Match  | Comp Decomp|| Sent |
- |                |  |  |  |         | Opera. | Action     ||(bits)|
-
- |ICMPv6 Type     |8 |1 |Dw|128      | equal  | not-sent   ||      |
- |ICMPv6 Type     |8 |1 |Up|129      | equal  | not-sent   ||      |
- |ICMPv6 Code     |8 |1 |Bi|0        | equal  | not-sent   ||      |
- |ICMPv6 Identif. |16|1 |Bi|0        | ignore | value-sent ||      |
- |ICMPv6 Sequence |16|1 |Bi|0        | MSB(24)| LSB        ||  8   |
- +================+==+==+==+=========+========+============++======+
-]]></artwork></figure-->
-
-<t>In this example, type and code are elided, the identifer has to be sent, and the sequence number is limited to one byte.</t>
-
 </section>
+</section>
+
+<section anchor="NoDestination" title="No Device matches the destination address of IPv6 packet coming from the internet">
+
+<t>TODO: should the SCHC C/D respond with a Destination Unreachable Error Message? With what source address?
+This would make it look like a router, which we have tried to avoid in all other situations.</t>
+	
+<t>PROPOSED TEXT: In that case, the SCHC C/D acts as a router and MUST have a routable IPv6 address to generate
+an ICMPv6 message.
+* If no Device matches the IPv6 prefix, a No Route to Destination ICMPv6 message (type 0, code 0) may be generated.
+* If at least a Device matching the IPv6 prefix is found, but no devIID matches, an Address Unreachable ICMPv6 message (type 0, code 3) may be generated.
+</t>
+
 </section>
 
 <section anchor="ProxyErrMsg" title="Device is the source of an ICMPv6 error message">
 
 <t>As stated in <xref target="RFC4443"/>, a node should generate an ICMPv6 message in response to an
-IPv6 packet that is malformed or which cannot be processed due to some incorrect field value.</t>
+IPv6 packet that is malformed or that cannot be processed due to some incorrect field value.</t>
 
 <t>The general intent of this document is to spare both the Device and the LPWAN network this un-necessary traffic.
-The incorrect packets should be caught at the core SCHC C/D and the ICMPv6 notification should be sent back from there.</t>
+As much as possible, the incorrect packets should be caught at the core SCHC C/D and the ICMPv6 notification should be sent back from there, impersonating the Device.</t>
 
 <figure title="Example of ICMPv6 error message sent back to the Internet" anchor="Fig-ICMPv6-up"><artwork><![CDATA[
      Device       NGW     core SCHC C/D                 Internet Host
@@ -511,10 +518,16 @@ The incorrect packets should be caught at the core SCHC C/D and the ICMPv6 notif
 ]]></artwork></figure>
 
 <t><xref target="Fig-ICMPv6-up"/> shows an example of an IPv6 packet trying to reach a Device. Let’s assume that the port number used
-as destination port is not “known” (needs better definition) from the core SCHC C/D. Instead of sending the packet over
+as destination port is not “known” (TODO: needs better definition) from the core SCHC C/D. Instead of sending the packet over
 the LPWAN and having this packet rejected by the Device, the core SCHC C/D issues
 an ICMPv6 error message “Destination Unreachable” (Type 1) with Code 1 (“Port Unreachable”) on behalf of the Device.</t>
+<t>See <xref target="traceroute"/> for a use of this feature in the traceroute use case.</t>
 
+<t>TODO: describe the situations where the SCHC C/D can actually ancitipate the response of the Device and act as a proxy.
+The default SCHC behavior is to forward uncompressed all packets it does not have a matching compression Rule for, so what can it know in order to anticipate?
+</t>
+
+<!--
 <t>In that case the SCHC C/D acts as a router and MUST have a routable IPv6 address to generate
 an ICMPv6 message. when compressing a packet containing an IPv6 header, no compression rules are found and:
 * if a rule contains some extension headers, a parameter problem may be generated (type 4),
@@ -525,6 +538,9 @@ an ICMPv6 message. when compressing a packet containing an IPv6 header, no compr
 <t>TODO: This assumes that all ports that the Device listens to will be matched by a SCHC rule. Is this the basic assumption of SCHC that all packets that do not match a rule are rejected? If yes, why do have fragmentation also for uncompressed packets?</t>
 
 <t>TODO: discuss the various Type/Code that are expected to be generated in response to various errors.</t>
+-->
+
+<t>TODO: describe the compression of the ICMPv6 error message coming back from the Device for IPv6 packets that were actually forwarded to it downlink over the LPWAN.</t>
 
 </section>
 
@@ -573,8 +589,9 @@ as described in <xref target="ErrMsgCompr"/> and forwarded over the LPWAN to the
 ]]></artwork></figure>
 
 <t><xref target="RFC4443"/> states that Type can take the values 1 to 4, and Code can be set to values between 0 and 6.
-Value is unused for the Destination Unreachable and Time Exceeded messages. It contains the MTU for
-the Packet Too Big message and a pointer to the byte causing the error for the Parameter Error message.
+Value is unused for the Destination Unreachable and Time Exceeded messages.
+For the Packet Too Big message, it contains the MTU.
+For the Parameter Error message, it containts a pointer to the byte causing the error.
 Therefore, Value is never expected to be greater than 1280 in LPWAN networks.</t>
 
 <t>The following generic rule can therefore be used to compress all ICMPv6 error messages as defined today.
@@ -595,8 +612,9 @@ packet ends with the compressed Value field.</t>
 of the IPv6 offending (invoking) packet … as possible”.
 In order to comply with this requirement, if there is enough information in the incoming ICMPv6 message for the core SCHC C/D to
 identify the rule that has been used to decompress the erroneous IPv6 packet, this Rule Id must be
-sent in the compressed ICMPv6 message to the Device.
-TODO: the erroneous IPv6 packet header (not just the Rule Id) should be sent back. This includes the Rule Id and the compression residue. This means the SCHC C/D uses the context backwards (in the reverse direction). How does the Device know it must also use the context backwards?</t>
+sent in the compressed ICMPv6 message to the Device.</t>
+
+<t>TODO: the erroneous IPv6 packet header (not just the Rule Id) should be sent back. This includes the Rule Id and the compression residue. This means the SCHC C/D uses the context backwards (in the reverse direction). How does the Device know it must also use the context backwards?</t>
 
 <t>TODO: how does one know that the “payload” of a compressed-header packet is in fact another compressed header?</t>
 
@@ -626,21 +644,13 @@ will respond with a “Destination Unreachable” (Type = 1) “Port Unreachable
        |           |            |<---------------------------|
        |           |            |                            |
        |           |            |--------------------------->|
-       |           |            |   ICMPv6 Hop Limit error   |
-       |           |            |                            |
-       |           |            |                            |
-       |           |            | Hop Limit=2, Dest Port=XXX |
-       |           |            |<---------------------------|
-       |           |            |                            |
-       |           |            |--------------------------->|
        |           |            |  ICMPv6 Port Unreachable   |
 
 
 ]]></artwork></figure>
 
-<t>When the probe packet first reaches the core SCHC C/D, its remaining Hop Limit is 1. The core SCHC C/D will
-respond back with a “Time Exceeded” (Type = 3) “Hop Limit” (Code = 0) ICMPv6 error message.
-Later on, when the probe packet reaches the code SCHC C/D with a Hop Limit value of 2, the core SCHC C/D will,
+<t>When the probe packet first reaches the core SCHC C/D, its remaining Hop Limit is 1.
+The core SCHC C/D will,
 as explained in <xref target="ProxyErrMsg"/>, answer back with a “Destination Unreachable” (Type = 1) “Port Unreachable” (Code = 4) ICMPv6 error message.
 This is what the traceroute6 command expects.
 Therefore, the traceroute6 command will work with LPWAN IPv6 destinations, except for the time displayed for the destination, which is actually the time to its proxy.</t>
@@ -648,6 +658,16 @@ Therefore, the traceroute6 command will work with LPWAN IPv6 destinations, excep
 <t>However, if the probe packet happens to hit a port that matches a SCHC rule for that Device, the packet will be compressed with this rule and sent over the LPWAN, which is unfortunate.
 Forwarding of packets to the Device over the LPWAN should only be done from authenticated/trusted sources anyway.
 Rate-limitation on top of authentication will mitigate this nuisance.</t>
+
+</section>
+
+<section anchor="data-model" title="Data Model Extensions">
+<t>To allow ping proxying, the Rule should contain an Action entry indicating what proxy to invoke when receiving a matching packet.
+Proxying Rules MUST allow empty CDA fields.
+The data model MUST include identifiers for ICMPv6 header fields (Type, Code, Checksum, Identifier, Sequence).
+</t>
+
+<t>TODO: insert reference to the data model draft</t>
 
 </section>
 
